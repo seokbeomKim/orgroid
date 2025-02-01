@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_calendars">
+
+    <fragment
+        android:id="@+id/navigation_calendars"
+        android:name="dev.seokbeomkim.orgroid.ui.calendars.CalendarsFragment"
+        android:label="@string/title_calendars"
+        tools:layout="@layout/fragment_setting" />
+
+    <fragment
+        android:id="@+id/navigation_setting"
+        android:name="dev.seokbeomkim.orgroid.ui.setting.SettingFragment"
+        android:label="@string/title_setting"
+        tools:layout="@layout/fragment_calendars" />
+
+    <fragment
+        android:id="@+id/navigation_about"
+        android:name="dev.seokbeomkim.orgroid.ui.about.AboutFragment"
+        android:label="@string/title_about"
+        tools:layout="@layout/fragment_about" />
+</navigation>

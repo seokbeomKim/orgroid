@@ -1,0 +1,41 @@
+* IN-PROGRESS [#C] Header [0%]
+SCHEDULED: <2025-01-27 Mon>
+
+We can add a header
+
+** Sub-header 1
+SCHEDULED: <2025-01-28 Tue>
+
+This is the description of sub-header 1.
+
+** Sub-header 2
+SCHEDULED: <2025-01-29 Wed>
+
+** Sub-header 2
+DEADLINE: <2025-01-31 Fri> SCHEDULED: <2025-01-30 Thu>
+This is duplicated items
+
+* Test
+This is an item including a description
+
+** TODO [#A] Sub-Task 1 [33%]
+SCHEDULED: <2025-02-24 Mon>
+There are many sub headers. And all items must be handled by the parser.
+
+*** TODO Sub-Sub-Task #1 [0/0]
+DEADLINE: <2025-01-27 Mon>
+
+*** IN-PROGRESS [#B] Sub-Sub-Task #2 [0%]
+DEADLINE: <2025-02-24 Mon>
+
+**** Task #1-2-1 
+DEADLINE: <2025-02-28 Fri>
+
+**** Task #1-2-2
+DEADLINE: <2025-02-11 Tue>
+
+*** DONE Finished Task
+CLOSED: [2025-01-27 Mon 20:33]
+:LOGBOOK:
+- State "DONE"       from              [2025-01-27 Mon 20:33]
+:END:

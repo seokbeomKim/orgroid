@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Orgroid</string>
+    <string name="title_calendars">Calendars</string>
+    <string name="title_setting">Setting</string>
+    <string name="title_about">About</string>
+
+    <string name="calendars_button_open">Add an org document</string>
+    <string name="calendars_label_calendar_list">Calendar Lists</string>
+</resources>
