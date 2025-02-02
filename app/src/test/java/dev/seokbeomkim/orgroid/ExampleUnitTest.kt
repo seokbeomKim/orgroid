@@ -7,6 +7,7 @@ import org.junit.Test
 
 import org.junit.Assert.*
 import java.io.BufferedReader
+import java.util.Date
 
 /**
  * Example local unit test, which will execute on the development machine (host).

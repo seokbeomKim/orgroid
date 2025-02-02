@@ -44,6 +44,10 @@ class OrgParser {
             println("Properties: ${item.getProperties()}")
             println("Priority: ${item.getPriority()}")
             println("Progress: ${item.getProgress()}")
+            println("Scheduled: ${item.getProperty(OrgProperty.SCHEDULED)}")
+            println("Deadline: ${item.getProperty(OrgProperty.DEADLINE)}")
+            println("Rrule_scheduled: ${item.toRruleFromOrgString(item.getProperty(OrgProperty.SCHEDULED).toString())}")
+            println("Rrule_deadline: ${item.toRruleFromOrgString(item.getProperty(OrgProperty.DEADLINE).toString())}")
             println()
         }
     }
@@ -100,7 +104,7 @@ class OrgParser {
     }
 
     fun findSchedule(line: String, item: OrgItem?): Boolean {
-        val regex = Regex("SCHEDULED: <([0-9]+-[0-9]+-[0-9]+ [A-Za-z]+)>")
+        val regex = Regex("SCHEDULED: <([0-9]+-[0-9]+-[0-9]+ .*)>")
         val matched = regex.find(line)
         item?.setProperty(
             OrgProperty.SCHEDULED, matched?.groupValues?.get(
@@ -111,7 +115,7 @@ class OrgParser {
     }
 
     fun findDeadline(line: String, item: OrgItem?): Boolean {
-        val regex = Regex("DEADLINE: <([0-9]+-[0-9]+-[0-9]+ [A-Za-z]+)>")
+        val regex = Regex("DEADLINE: <([0-9]+-[0-9]+-[0-9]+ .*)>")
         val matched = regex.find(line)
         item?.setProperty(
             OrgProperty.DEADLINE, matched?.groupValues?.get(

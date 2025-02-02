@@ -1,6 +1,6 @@
 package dev.seokbeomkim.orgtodo.parser
 
-import dev.seokbeomkim.orgtodo.calendar.CalendarItem
+import dev.seokbeomkim.orgtodo.calendar.EventItem
 import java.util.Date
 
 /**
@@ -106,8 +106,25 @@ class OrgItem {
         return rValue
     }
 
-    fun toCalendarItem(): CalendarItem {
-        val rvalue = CalendarItem()
+    /**
+     * Convert org string (SCHEDULED, DEADLINE) to RRule (recurrence)
+     */
+    fun toRruleFromOrgString(string: String): String {
+        var rValue: String = ""
+        if (string.length > 0) {
+            val regex = Regex("(\\.?[+-]+\\d+[[A-Z][a-z]])")
+            regex.find(string)?.let { x->
+                rValue = x.value
+            }
+        }
+        return rValue
+    }
+
+    /**
+     * Convert OrgItem to CalendarItem
+     */
+    fun toCalendarItem(): EventItem {
+        val rvalue = EventItem()
         var dateStr: String?
 
         rvalue.setTitle(title)

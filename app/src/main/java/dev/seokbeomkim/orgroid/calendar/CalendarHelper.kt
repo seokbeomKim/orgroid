@@ -18,7 +18,7 @@ import java.util.TimeZone
 class CalendarHelper {
     val CALENDAR_NAME: String = "orgroid"
 
-    var calendars: ArrayList<CalendarItem>
+    var calendars: ArrayList<EventItem>
     lateinit var appMainContext: Context
 
     companion object {
@@ -40,7 +40,7 @@ class CalendarHelper {
         instance?.appMainContext = context
     }
 
-    fun getCalendarArrayList(): ArrayList<CalendarItem> {
+    fun getCalendarArrayList(): ArrayList<EventItem> {
         return calendars
     }
 
@@ -54,7 +54,7 @@ class CalendarHelper {
                 println("display name: ${hash[CalendarContract.Calendars.CALENDAR_DISPLAY_NAME]}")
                 println("calendar id: ${hash[CalendarContract.Calendars._ID]}")
 
-                var newItem = CalendarItem()
+                var newItem = EventItem()
                 newItem.setTitle("${hash[CalendarContract.Calendars.CALENDAR_DISPLAY_NAME]}")
                 newItem.setDescription("${hash[CalendarContract.Calendars.ACCOUNT_NAME]}")
                 this.calendars.add(newItem)

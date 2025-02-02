@@ -1,12 +1,23 @@
 package dev.seokbeomkim.orgroid
 
+import android.content.ContentResolver
+import android.content.ContentUris
+import android.content.ContentValues
+import android.content.Context
+import android.net.Uri
+import android.provider.CalendarContract
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.rule.GrantPermissionRule
+import dev.seokbeomkim.orgtodo.calendar.CalendarHelper
 
 import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import org.junit.Rule
+import java.util.TimeZone
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -87,7 +98,7 @@ class CalendarTest {
     @Test
     fun getListOfCalendar() {
         val helper = CalendarHelper()
-        val calendars = helper.getCalendarList(ApplicationProvider.getApplicationContext())
+        val calendars = helper.getCalendarArrayList()
 
         println("Calendar list:")
         calendars.forEach {

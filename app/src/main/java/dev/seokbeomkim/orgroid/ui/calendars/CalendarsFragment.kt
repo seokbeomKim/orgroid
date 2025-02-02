@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.seokbeomkim.orgroid.databinding.FragmentCalendarsBinding
 import dev.seokbeomkim.orgtodo.calendar.CalendarHelper
-import dev.seokbeomkim.orgtodo.calendar.CalendarItem
 
 class CalendarsFragment : Fragment() {
 

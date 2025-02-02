@@ -19,20 +19,20 @@ This is duplicated items
 This is an item including a description
 
 ** TODO [#A] Sub-Task 1 [33%]
-SCHEDULED: <2025-02-24 Mon>
+SCHEDULED: <2025-02-24 Mon ++1m>
 There are many sub headers. And all items must be handled by the parser.
 
 *** TODO Sub-Sub-Task #1 [0/0]
-DEADLINE: <2025-01-27 Mon>
+DEADLINE: <2025-01-27 Mon +1m>
 
 *** IN-PROGRESS [#B] Sub-Sub-Task #2 [0%]
-DEADLINE: <2025-02-24 Mon>
+DEADLINE: <2025-02-24 Mon +1w>
 
 **** Task #1-2-1 
-DEADLINE: <2025-02-28 Fri>
+DEADLINE: <2025-02-28 Fri ++1w>
 
 **** Task #1-2-2
-DEADLINE: <2025-02-11 Tue>
+DEADLINE: <2025-02-11 Tue .+1w>
 
 *** DONE Finished Task
 CLOSED: [2025-01-27 Mon 20:33]

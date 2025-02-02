@@ -4,9 +4,9 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import dev.seokbeomkim.orgroid.databinding.CalendarsRecyclerViewRowBinding
-import dev.seokbeomkim.orgtodo.calendar.CalendarItem
+import dev.seokbeomkim.orgtodo.calendar.EventItem
 
-class CalendarsRecyclerViewAdapter(val items: ArrayList<CalendarItem>)
+class CalendarsRecyclerViewAdapter(val items: ArrayList<EventItem>)
     : RecyclerView.Adapter<CalendarsRecyclerViewAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: CalendarsRecyclerViewRowBinding)
