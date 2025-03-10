@@ -53,6 +53,7 @@ class CalendarTest {
         helper.deleteCalendar(ApplicationProvider.getApplicationContext(), 13)
     }
 
+    @Test
     fun addEventToCalendar(
         context: Context,
         calendarId: Long,
@@ -83,6 +84,7 @@ class CalendarTest {
         }
     }
 
+    @Test
     fun deleteEvent(context: Context, eventId: Long) {
         val cr: ContentResolver = context.contentResolver
         val uri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)

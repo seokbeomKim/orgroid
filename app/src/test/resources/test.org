@@ -3,17 +3,59 @@ SCHEDULED: <2025-01-27 Mon>
 
 We can add a header
 
-** Sub-header 1
-SCHEDULED: <2025-01-28 Tue>
+** Sub-header
+This is a node having only a header.
 
-This is the description of sub-header 1.
+** Sub-header
+This is a node having the duplicated a header.
+
+** TODO [#A] Sub-header with priority
+This is a node for testing priority but no scheduled or done.
+
+** TODO [#B] Sub-header with B priority
+This is a node for testing priority but no scheduled or done.
+
+** Sub-header
+SCHEDULED: <2025-02-16 Sun>
+Duplicated header but has SCHEDULED
+
+** Sub-header
+DEADLINE: <2025-02-22 Sat>
+Duplicated header but has DEADLINE
+
+** TODO Sub-header
+DEADLINE: <2025-02-22 Sat>
+Duplicated header but has DEADLINE but having additional status info
+
+* Ranged timestamp
 
 ** Sub-header 2
-SCHEDULED: <2025-01-29 Wed>
+SCHEDULED: <2025-01-30 Thu>--<2025-02-16 Sun>
+Duplicated header but has range
 
-** Sub-header 2
-DEADLINE: <2025-01-31 Fri> SCHEDULED: <2025-01-30 Thu>
-This is duplicated items
+** IN-PROGRESS Sub-header 2
+DEADLINE: <2025-01-31 Fri>--<2025-02-16 Sun>
+A node with ranged deadline
+
+** Sub-header 3
+SCHEDULED: <2025-02-16 Sun 08:00-09:00>--<2025-02-17 Mon 10:00-11:30>
+
+** Sub-header 3
+DEADLINE: <2025-02-16 Sun 08:00-09:00>--<2025-02-17 Mon 10:00-11:30>
+영어가 아닌 다른 언어로 입력된 것도 파싱할 수 있어야 한다.
+위와 같이 DEADLINE이 되어 있는 경우, 각 endpoint 시간 사이는 모두 하루종일 스케쥴링 된 것처럼 되어야 한다.
+
+** Sub-header 4
+SCHEDULED: <2025-02-16 Sun 10:00>--<2025-02-18 Tue 14:00--16:00>
+DEADLINE: <2025-02-16 Sun 08:00-09:00>--<2025-02-21 Fri 10:00-11:30>
+
+A test node for the case of SCHEDULED and DEADLINE
+
+** Sub-header 5
+SCHEDULED: <2025-02-16 Sun 10:00>--<2025-02-18 Tue 14:00--16:00>
+DEADLINE: <2025-02-16 Sun 08:00>--<2025-02-21 Fri 10:00>
+
+A test node for the case of SCHEDULED and DEADLINE
 
 * Test
 This is an item including a description
@@ -34,8 +76,17 @@ DEADLINE: <2025-02-28 Fri ++1w>
 **** Task #1-2-2
 DEADLINE: <2025-02-11 Tue .+1w>
 
+**** Task #1-2-3
+DEADLINE: <2025-02-11 Tue ++2h>
+
 *** DONE Finished Task
 CLOSED: [2025-01-27 Mon 20:33]
 :LOGBOOK:
 - State "DONE"       from              [2025-01-27 Mon 20:33]
 :END:
+
+* [#A] Property Test
+:PROPERTIES:
+:CATEGORY: TEST_CATEGORY
+:END:
+A node having a customized property: CATEGORY.

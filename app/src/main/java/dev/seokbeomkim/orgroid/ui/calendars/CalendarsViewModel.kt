@@ -8,7 +8,7 @@ import android.provider.OpenableColumns
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import dev.seokbeomkim.orgtodo.parser.OrgParser
+import dev.seokbeomkim.orgroid.parser.OrgParser
 import java.io.File
 
 class CalendarsViewModel : ViewModel() {
@@ -55,7 +55,7 @@ class CalendarsViewModel : ViewModel() {
             if (file.exists()) {
                 parser.open(file)
                 parser.parse()
-                parser.dumpItems()
+                println(parser)
             } else {
                 Log.e(TAG, "tryToParseOrgFile: the file ($fullPath) does not exist!")
             }

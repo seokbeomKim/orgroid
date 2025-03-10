@@ -1,6 +1,6 @@
 package dev.seokbeomkim.orgtodo.calendar
 
-import dev.seokbeomkim.orgtodo.parser.OrgItem
+import dev.seokbeomkim.orgroid.parser.OrgItem
 import java.util.Date
 
 /**

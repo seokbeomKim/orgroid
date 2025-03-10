@@ -1,145 +1,65 @@
-package dev.seokbeomkim.orgtodo.parser
+package dev.seokbeomkim.orgroid.parser
 
 import dev.seokbeomkim.orgtodo.calendar.EventItem
+import java.util.Calendar
 import java.util.Date
 
 /**
  * OrgItem: a class to represent an item in an org file.
  */
 class OrgItem {
-    private var title: String
-    private var status: String
-    private var body: String
-    private var priority: String
-    private var properties: MutableMap<String, String>
-    private var progress: String
+    var title: String = ""
+    var status: String = ""
+    var body: String = ""
+    var priority: String = ""
+    var properties: MutableMap<String, String> = mutableMapOf()
+    var progress: String = ""
+    var scheduled: OrgDateItem? = null
+    var deadline: OrgDateItem? = null
 
-    constructor() {
-        this.title = ""
-        this.body = ""
-        this.status = ""
-        this.priority = ""
-        this.progress = ""
-        this.properties = mutableMapOf()
-    }
-
-    constructor(
-        title: String, body: String, status: String, priority: String,
-        progress: String, properties: MutableMap<String, String>
-    ) {
-        this.title = title
-        this.body = body
-        this.status = status
-        this.priority = priority
-        this.progress = progress
-        this.properties = properties
-    }
-
-    fun getTitle(): String = title
-    fun setTitle(newTitle: String) {
-        title = newTitle
-    }
-
-    fun getProgress(): String = progress
-    fun setProgress(newProgress: String) {
-        progress = newProgress
-    }
-
-    fun getBody(): String = body
-    fun setBody(newBody: String) {
-        body = newBody
-    }
-
-    fun addToBody(line: String) {
-        if (!line.isEmpty()) {
-            if (body.isEmpty()) {
-                body = line
-            } else {
-                body += "\n" + line
-            }
-        }
-    }
-
-    fun getStatus(): String = status
-    fun setStatus(newStatus: String) {
-        status = newStatus
-    }
-
-    fun getProperties(): Map<String, String> = properties
-    fun hasProperty(key: String): Boolean {
-        return properties.containsKey(key)
-    }
-
-    fun getProperty(key: String): String? = properties[key]
-    fun getProperty(key: String, defaultValue: String): String {
-        return properties.getOrDefault(key, defaultValue)
-    }
-
-    fun setProperty(key: String, newValue: String?) {
-        if (newValue != null) {
-            properties[key] = newValue
-        }
-    }
-
-    fun removeProperty(key: String) {
-        properties.remove(key)
-    }
-
-    fun getPriority(): String = priority
-    fun setPriority(newPriority: String) {
-        priority = newPriority
-    }
-
-    /**
-     * Convert org string (SCHEDULED, DEADLINE) to Date
-     */
     fun toDateFromOrgString(string: String): Date {
-        var rValue = Date()
-        if (string.length > 0) {
-            val regex = Regex("([0-9]+)-([0-9]+)-([0-9]+)")
+        val cal = Calendar.getInstance()
+        if (string.isNotEmpty()) {
+            val regex = Regex("([0-9]+)-([0-9]+)-([0-9]+) +([0-9]+:[0-9]+-+[0-9]+:[0-9]+)")
             regex.find(string)?.let { x ->
-                val (year, month, day) = x.destructured
-                println("year: $year, month: $month, day: $day")
-                rValue = Date(year.toInt(), month.toInt(), day.toInt())
+                val (year, month, day, time) = x.destructured
+                println("year: $year, month: $month, day: $day, time: $time")
+                cal.set(Calendar.YEAR, year.toInt())
+                cal.set(Calendar.MONTH, month.toInt())
+                cal.set(Calendar.DAY_OF_MONTH, day.toInt())
             }
         }
-        return rValue
+        return cal.time
     }
 
-    /**
-     * Convert org string (SCHEDULED, DEADLINE) to RRule (recurrence)
-     */
-    fun toRruleFromOrgString(string: String): String {
-        var rValue: String = ""
-        if (string.length > 0) {
-            val regex = Regex("(\\.?[+-]+\\d+[[A-Z][a-z]])")
-            regex.find(string)?.let { x->
-                rValue = x.value
-            }
-        }
-        return rValue
-    }
-
-    /**
-     * Convert OrgItem to CalendarItem
-     */
+    @Suppress("unused")
     fun toCalendarItem(): EventItem {
         val rvalue = EventItem()
-        var dateStr: String?
 
         rvalue.setTitle(title)
         rvalue.setDescription(body)
 
-        dateStr = properties[OrgProperty.SCHEDULED]
-        if (dateStr != null) {
-            rvalue.setStartTime(toDateFromOrgString(dateStr))
-        }
+// TODO implement this
+//
+//        var dateStr: String? = properties[OrgProperty.SCHEDULED_FROM]
+//        if (dateStr != null) {
+//            rvalue.setStartTime(toDateFromOrgString(dateStr))
+//        }
+//
+//        dateStr = properties[OrgProperty.DEADLINE_FROM]
+//        if (dateStr != null) {
+//            rvalue.setEndTime(toDateFromOrgString(dateStr))
+//        }
 
-        dateStr = properties[OrgProperty.DEADLINE]
-        if (dateStr != null) {
-            rvalue.setEndTime(toDateFromOrgString(dateStr))
-        }
+        return rvalue
+    }
 
+    override fun toString(): String {
+        var rvalue = "Title: $title\n"
+        rvalue += "Status: $status\n"
+        rvalue += "Body: $body\n"
+        rvalue += "Schedule: $scheduled\n"
+        rvalue += "Deadline: $deadline"
         return rvalue
     }
 }

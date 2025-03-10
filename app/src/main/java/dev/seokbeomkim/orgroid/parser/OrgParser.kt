@@ -1,9 +1,11 @@
-package dev.seokbeomkim.orgtodo.parser
+package dev.seokbeomkim.orgroid.parser
 
+import dev.seokbeomkim.orgtodo.parser.OrgConfigurator
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.InputStream
+import java.time.ZonedDateTime
 
 /**
  * OrgParser: Emacs org file parser
@@ -36,118 +38,211 @@ class OrgParser {
         }
     }
 
-    fun dumpItems() {
-        items.forEach { item ->
-            println("Title: ${item.getTitle()}")
-            println("Status: ${item.getStatus()}")
-            println("Body: ${item.getBody()}")
-            println("Properties: ${item.getProperties()}")
-            println("Priority: ${item.getPriority()}")
-            println("Progress: ${item.getProgress()}")
-            println("Scheduled: ${item.getProperty(OrgProperty.SCHEDULED)}")
-            println("Deadline: ${item.getProperty(OrgProperty.DEADLINE)}")
-            println("Rrule_scheduled: ${item.toRruleFromOrgString(item.getProperty(OrgProperty.SCHEDULED).toString())}")
-            println("Rrule_deadline: ${item.toRruleFromOrgString(item.getProperty(OrgProperty.DEADLINE).toString())}")
-            println()
-        }
+    fun getItems(): MutableList<OrgItem> {
+        return items
     }
 
-    fun isHeader(line: String): Boolean = line.startsWith("*")
+    override fun toString(): String {
+        var returnString = ""
+        items.forEach { item -> returnString += "$item\n=============\n" }
+        return returnString
+    }
 
-    fun findStatus(line: String): String? {
-        val status = line.split(" ")?.firstOrNull()
-        if ((status != null) && (OrgConfigurator.checkStatusExist(status))) {
-            return status
+    private fun isHeader(line: String): Boolean = line.startsWith("*")
+
+    private fun findStatus(line: String): String? {
+        val status = line.split(" ").firstOrNull()
+        return if ((status != null) && (OrgConfigurator.checkStatusExist(status))) {
+            status
         } else {
-            return null
+            null
         }
     }
 
-    fun findPriority(line: String): String? {
-        var regex = Regex("\\[#(.)\\]")
+    private fun findPriority(line: String): String? {
+        val regex = Regex("\\[#(.)]")
         val priority = regex.find(line)
 
-        if (priority == null) {
-            return null
-        } else {
-            return priority?.groupValues?.get(priority.groupValues.lastIndex)
-        }
+        return priority?.groupValues?.get(priority.groupValues.lastIndex)
     }
 
-    fun findProgress(line: String): String? {
-        var regex1 = Regex("\\[(\\d*\\/\\d*)\\]")
-        var regex2 = Regex("\\[(\\d+%)\\]")
+    private fun findProgress(line: String): String? {
+        val regex1 = Regex("\\[(\\d*/\\d*)]")
+        val regex2 = Regex("\\[(\\d+%)]")
 
         val progress1 = regex1.find(line)
         val progress2 = regex2.find(line)
 
-        if (progress1 == null && progress2 == null) {
-            return null
+        return if (progress1 == null && progress2 == null) {
+            null
         } else {
-            return progress1?.groupValues?.get(progress1.groupValues.lastIndex)
+            progress1?.groupValues?.get(progress1.groupValues.lastIndex)
                 ?: progress2?.groupValues?.get(progress2.groupValues.lastIndex)
         }
     }
 
-    fun sanitizeTitle(item: OrgItem): OrgItem {
-        var title = item.getTitle()
+    private fun sanitizeItem(item: OrgItem): OrgItem {
+        var title = item.title
 
-        if (title != null) {
-            title = title.replace(item.getStatus(), "")
-            title = title.replace("[#" + item.getPriority() + "]", "")
-            title = title.replace("[" + item.getProgress() + "]", "")
+        title = title.replace(item.status, "")
+        title = title.replace("[#" + item.priority + "]", "")
+        title = title.replace("[" + item.progress + "]", "")
 
-            item.setTitle(title.trim())
+        item.title = title.trim()
+
+        return item
+    }
+
+    private fun findDate(date: String, item: OrgDateItem): OrgDateItem {
+        val regex = Regex("""(\d{4}+)-(\d{2}+)-(\d{2}+)""")
+        val matched = regex.find(date)
+        if (matched != null && matched.groupValues.lastIndex == 3) {
+            item.from = ZonedDateTime.now()
+                .withYear(matched.groupValues[1].toInt())
+                .withMonth(matched.groupValues[2].toInt())
+                .withDayOfMonth(matched.groupValues[3].toInt())
+        } else {
+            println("No match found: $date")
         }
 
         return item
     }
 
-    fun findSchedule(line: String, item: OrgItem?): Boolean {
-        val regex = Regex("SCHEDULED: <([0-9]+-[0-9]+-[0-9]+ .*)>")
-        val matched = regex.find(line)
-        item?.setProperty(
-            OrgProperty.SCHEDULED, matched?.groupValues?.get(
-                matched.groupValues.lastIndex
-            )
-        )
-        return matched != null
+    private fun findTime(date: String, item: OrgDateItem): OrgDateItem {
+        var regex = Regex("""(\d{2}):(\d{2})-+(\d{2}):(\d{2})""")
+        var matched = regex.find(date)
+        if (matched != null) {
+            item.from = item.from
+                ?.withHour(matched.groupValues[1].toInt())
+                ?.withMinute(matched.groupValues[2].toInt())
+            item.to = item.to
+                ?.withHour(matched.groupValues[3].toInt())
+                ?.withMinute(matched.groupValues[4].toInt())
+        } else {
+            regex = Regex("""(\d{2}):(\d{2})""")
+            matched = regex.find(date)
+            if (matched != null) {
+                item.from = item.from
+                    ?.withHour(matched.groupValues[1].toInt())
+                    ?.withMinute(matched.groupValues[2].toInt())
+            }
+        }
+
+        return item
     }
 
-    fun findDeadline(line: String, item: OrgItem?): Boolean {
-        val regex = Regex("DEADLINE: <([0-9]+-[0-9]+-[0-9]+ .*)>")
-        val matched = regex.find(line)
-        item?.setProperty(
-            OrgProperty.DEADLINE, matched?.groupValues?.get(
-                matched.groupValues.lastIndex
-            )
-        )
-        return matched != null
+    private fun findRepeat(date: String, item: OrgDateItem): OrgDateItem {
+        val regex = Regex("""(\.\+|\+\+|\+)([0-9]+)([a-zA-Z])""")
+        val matched = regex.find(date)
+        if (matched != null) {
+            if (matched.groupValues[1] == ".+") {
+                item.setRepeatType(OrgDateItem.OrgRepeatType.NEXT_FROM_NOW)
+            } else if (matched.groupValues[1] == "++") {
+                item.setRepeatType(OrgDateItem.OrgRepeatType.SKIP_UNTIL_NOW)
+            } else if (matched.groupValues[1] == "+") {
+                item.setRepeatType(OrgDateItem.OrgRepeatType.SIMPLE)
+            } else {
+                println("Unknown repeat type: ${matched.groupValues[1]}")
+            }
+            item.setRepeatCount(matched.groupValues[2].toInt())
+            when (matched.groupValues[3]) {
+                "y" -> item.setRepeatUnit(OrgDateItem.OrgRepeatUnit.YEAR)
+                "m" -> item.setRepeatUnit(OrgDateItem.OrgRepeatUnit.MONTH)
+                "d" -> item.setRepeatUnit(OrgDateItem.OrgRepeatUnit.DAY)
+                "h" -> item.setRepeatUnit(OrgDateItem.OrgRepeatUnit.HOUR)
+            }
+        } else {
+            item.setRepeatType(OrgDateItem.OrgRepeatType.NONE)
+        }
+
+        return item
+    }
+
+    private fun parseDate(date: String): OrgDateItem {
+        var r = OrgDateItem()
+
+        r = this.findDate(date, r)
+        r = this.findTime(date, r)
+        r = this.findRepeat(date, r)
+
+        return r
+    }
+
+    fun parseSchedule(line: String, item: OrgItem?): Boolean {
+        val property = "SCHEDULED:"
+        if (!line.startsWith(property)) {
+            return false
+        }
+
+        val openChar = '<'
+        val closeChar = '>'
+        var indexOfOpenChar = 0
+        var indexOfCloseChar = 0
+
+        while (true) {
+            indexOfOpenChar = line.indexOf(openChar, indexOfOpenChar + 1)
+            indexOfCloseChar = line.indexOf(closeChar, indexOfCloseChar + 1)
+
+            if (indexOfOpenChar == -1 || indexOfCloseChar == -1) {
+                break
+            }
+
+            val substring = line.substring(indexOfOpenChar + 1, indexOfCloseChar)
+            item?.scheduled = parseDate(substring)
+        }
+
+        return true
+    }
+
+    private fun parseDeadline(line: String, item: OrgItem?): Boolean {
+        val property = "DEADLINE:"
+        if (!line.startsWith(property)) {
+            return false
+        }
+
+        val openChar = '<'
+        val closeChar = '>'
+        var indexOfOpenChar = 0
+        var indexOfCloseChar = 0
+
+        while (true) {
+            indexOfOpenChar = line.indexOf(openChar, indexOfOpenChar + 1)
+            indexOfCloseChar = line.indexOf(closeChar, indexOfCloseChar + 1)
+
+            if (indexOfOpenChar == -1 || indexOfCloseChar == -1) {
+                break
+            }
+
+            val substring = line.substring(indexOfOpenChar + 1, indexOfCloseChar)
+            item?.deadline = parseDate(substring)
+        }
+
+        return true
     }
 
     /**
      * Parse an element in the org file. If the element is properties, then return null. Otherwise,
      * return the item that is a new org item.
      */
-    fun parseLine(current: OrgItem?, line: String): OrgItem? {
+    private fun parseLine(current: OrgItem?, line: String): OrgItem? {
         var rValue = current
         if (isHeader(line)) {
             val title = line.trimStart('*').trim()
 
             rValue = OrgItem()
-            rValue.setTitle(title)
+            rValue.title = title
 
-            title.split(" ").forEach({ x ->
-                findStatus(x)?.let { rValue?.setStatus(it) }
-                findPriority(x)?.let { rValue?.setPriority(it) }
-                findProgress(x)?.let { rValue?.setProgress(it) }
-            })
+            title.split(" ").forEach { x ->
+                findStatus(x)?.let { rValue?.status = it }
+                findPriority(x)?.let { rValue?.priority = it }
+                findProgress(x)?.let { rValue?.progress = it }
+            }
 
-            rValue = sanitizeTitle(rValue)
+            rValue = sanitizeItem(rValue)
             items.add(rValue)
         } else {
-            if ((findSchedule(line, rValue) == false) && (findDeadline(line, rValue) == false)) {
-                rValue?.addToBody(line)
+            if (!parseSchedule(line, rValue) && !parseDeadline(line, rValue)) {
+                rValue?.body = line
             }
         }
 
@@ -157,23 +252,31 @@ class OrgParser {
     /**
      * Parse the org file. 'reader' must be initialized first.
      */
-    fun parse() {
+    fun parse(mustDefineSchedule: Boolean = false, mustDefineDeadline: Boolean = false) {
         var cursor: OrgItem? = null
+        var newItem: OrgItem?
 
         reader?.use { bufferedReader ->
             bufferedReader.lines().forEach { line ->
-                var newItem = parseLine(cursor, line)
-                if (newItem != cursor) {
-                    cursor = newItem
-                } else if (newItem != null) {
-                    if (items.last() != null) {
-                        items.removeAt(items.lastIndex)
+                newItem = this.parseLine(cursor, line)
+                if ((cursor != null) && (cursor != newItem)) {
+                    if ((mustDefineSchedule && cursor?.scheduled == null) ||
+                        (mustDefineDeadline && cursor?.deadline == null)
+                    ) {
+                        items.remove(cursor)
                     }
-                    items.add(newItem)
                 }
+                cursor = newItem
             }
         } ?: run {
             println("Reader is not initialized")
+        }
+
+        // handle the last one
+        items.lastOrNull { x ->
+            (mustDefineSchedule && x.scheduled == null) || (mustDefineDeadline && x.deadline == null)
+        }?.let { x ->
+            items.remove(x)
         }
     }
 }
