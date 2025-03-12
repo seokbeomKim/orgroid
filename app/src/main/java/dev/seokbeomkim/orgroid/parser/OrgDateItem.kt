@@ -1,11 +1,10 @@
 package dev.seokbeomkim.orgroid.parser
 
-import java.time.ZoneId
 import java.time.ZonedDateTime
 
 class OrgDateItem {
-    var from: ZonedDateTime? = null
-    var to: ZonedDateTime? = null
+    var start: ZonedDateTime? = null
+    var end: ZonedDateTime? = null
 
     enum class OrgRepeatType {
         NONE,
@@ -46,6 +45,6 @@ class OrgDateItem {
     }
 
     override fun toString(): String {
-        return "OrgDateItem(from=$from, to=$to, repeatType=$repeatType, repeatCount=$repeatCount, repeatUnit=$repeatUnit)"
+        return "OrgDateItem(start=$start, end=$end, repeatType=$repeatType, repeatCount=$repeatCount, repeatUnit=$repeatUnit)"
     }
 }

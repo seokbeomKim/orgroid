@@ -1,6 +1,5 @@
 package dev.seokbeomkim.orgroid.parser
 
-import dev.seokbeomkim.orgtodo.parser.OrgConfigurator
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -52,7 +51,7 @@ class OrgParser {
 
     private fun findStatus(line: String): String? {
         val status = line.split(" ").firstOrNull()
-        return if ((status != null) && (OrgConfigurator.checkStatusExist(status))) {
+        return if ((status != null) && (OrgStatus.checkValidation(status))) {
             status
         } else {
             null
@@ -97,7 +96,7 @@ class OrgParser {
         val regex = Regex("""(\d{4}+)-(\d{2}+)-(\d{2}+)""")
         val matched = regex.find(date)
         if (matched != null && matched.groupValues.lastIndex == 3) {
-            item.from = ZonedDateTime.now()
+            item.start = ZonedDateTime.now()
                 .withYear(matched.groupValues[1].toInt())
                 .withMonth(matched.groupValues[2].toInt())
                 .withDayOfMonth(matched.groupValues[3].toInt())
@@ -112,17 +111,17 @@ class OrgParser {
         var regex = Regex("""(\d{2}):(\d{2})-+(\d{2}):(\d{2})""")
         var matched = regex.find(date)
         if (matched != null) {
-            item.from = item.from
+            item.start = item.start
                 ?.withHour(matched.groupValues[1].toInt())
                 ?.withMinute(matched.groupValues[2].toInt())
-            item.to = item.to
+            item.end = item.end
                 ?.withHour(matched.groupValues[3].toInt())
                 ?.withMinute(matched.groupValues[4].toInt())
         } else {
             regex = Regex("""(\d{2}):(\d{2})""")
             matched = regex.find(date)
             if (matched != null) {
-                item.from = item.from
+                item.start = item.start
                     ?.withHour(matched.groupValues[1].toInt())
                     ?.withMinute(matched.groupValues[2].toInt())
             }
@@ -168,7 +167,7 @@ class OrgParser {
         return r
     }
 
-    fun parseSchedule(line: String, item: OrgItem?): Boolean {
+    private fun parseSchedule(line: String, item: OrgItem?): Boolean {
         val property = "SCHEDULED:"
         if (!line.startsWith(property)) {
             return false
@@ -242,7 +241,11 @@ class OrgParser {
             items.add(rValue)
         } else {
             if (!parseSchedule(line, rValue) && !parseDeadline(line, rValue)) {
-                rValue?.body = line
+                if (rValue?.body == null) {
+                    rValue?.body = line
+                } else {
+                    rValue.body += "\n$line"
+                }
             }
         }
 

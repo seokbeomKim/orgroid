@@ -95,7 +95,7 @@ class OrgParserUnitTest {
         parser.getItems().forEachIndexed({ i, x ->
             assertEquals(
                 "Checking a header of item $i:",
-                shouldbe[i], x.scheduled?.from
+                shouldbe[i], x.scheduled?.start
             )
         })
     }
