@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.seokbeomkim.orgroid.databinding.FragmentCalendarsBinding
-import dev.seokbeomkim.orgtodo.calendar.CalendarHelper
+import dev.seokbeomkim.orgroid.calendar.CalendarHelper
 
 class CalendarsFragment : Fragment() {
 
@@ -21,18 +21,22 @@ class CalendarsFragment : Fragment() {
 
     private fun initFindButton(findButton: Button) {
         val calendarsViewModel = ViewModelProvider(this).get(CalendarsViewModel::class.java)
-        val getContentByFindButton = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let {
-                val (fileName, extension) = calendarsViewModel.getFileNameAndExtension(this.requireContext(), uri)
-                println("File Name: $fileName")
-                println("Extension: $extension")
+        val getContentByFindButton =
+            registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+                uri?.let {
+                    val (fileName, extension) = calendarsViewModel.getFileNameAndExtension(
+                        this.requireContext(),
+                        uri
+                    )
+                    println("File Name: $fileName")
+                    println("Extension: $extension")
 
-                val fullPath = calendarsViewModel.getRealPathFromURI(this.requireContext(), uri)
-                println("Full Path: $fullPath")
+                    val fullPath = calendarsViewModel.getRealPathFromURI(this.requireContext(), uri)
+                    println("Full Path: $fullPath")
 
-                calendarsViewModel.tryToParseOrgFile(fullPath)
+                    calendarsViewModel.tryToParseOrgFile(fullPath)
+                }
             }
-        }
 
         findButton.setOnClickListener {
             getContentByFindButton.launch("*/*")
@@ -40,7 +44,8 @@ class CalendarsFragment : Fragment() {
     }
 
     private fun initCalendarList(calendarRecyclerView: RecyclerView) {
-        val calendarsAdapter = CalendarsRecyclerViewAdapter(CalendarHelper.getInstace().getCalendarArrayList())
+        val calendarsAdapter =
+            CalendarsRecyclerViewAdapter(CalendarHelper.getInstance().getCalendarArrayList())
         calendarRecyclerView.layoutManager = LinearLayoutManager(this.requireContext())
         calendarRecyclerView.adapter = calendarsAdapter
     }

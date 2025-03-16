@@ -2,10 +2,14 @@ package dev.seokbeomkim.orgroid.parser
 
 import java.time.ZonedDateTime
 
-class OrgDateItem {
+class OrgDate {
     var start: ZonedDateTime? = null
     var end: ZonedDateTime? = null
 
+    /**
+     * Actually, we do not need to consider how to handle repeat type.
+     * This is just an information to display.
+     */
     enum class OrgRepeatType {
         NONE,
         SIMPLE, // +
@@ -46,5 +50,14 @@ class OrgDateItem {
 
     override fun toString(): String {
         return "OrgDateItem(start=$start, end=$end, repeatType=$repeatType, repeatCount=$repeatCount, repeatUnit=$repeatUnit)"
+    }
+
+    fun merge(date: OrgDate) {
+        if (start?.isAfter(date.start) == true) {
+            start = date.start
+        }
+        if (end?.isBefore(date.end) == true) {
+            end = date.end
+        }
     }
 }

@@ -6,6 +6,7 @@ import org.junit.Test
 
 class OrgParserUnitTest {
     @Test
+    // Test Parser's dump method.
     fun testParseDump() {
         // Test Parser's dump method.
         // This testcase does not compare values but just print them.
@@ -16,6 +17,12 @@ class OrgParserUnitTest {
         }
         parser.parse(false, true)
         println(parser)
+    }
+
+    @Test
+    // Test Org
+    fun testEventItem() {
+
     }
 
     @Test

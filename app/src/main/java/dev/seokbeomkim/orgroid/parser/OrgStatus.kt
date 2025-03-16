@@ -1,5 +1,11 @@
 package dev.seokbeomkim.orgroid.parser
 
+/**
+ * A class to manage the status of Org node.
+ *
+ * By default, the status list contains "TODO", "IN-PROGRESS", "DONE".
+ * But user can add or remove the status.
+ */
 class OrgStatus {
     companion object {
         private var statusList: MutableList<String> = mutableListOf("TODO", "IN-PROGRESS", "DONE")

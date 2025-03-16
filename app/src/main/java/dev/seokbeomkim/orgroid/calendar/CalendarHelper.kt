@@ -1,4 +1,4 @@
-package dev.seokbeomkim.orgtodo.calendar
+package dev.seokbeomkim.orgroid.calendar
 
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -7,8 +7,11 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.CalendarContract
+import android.util.Log
 import android.widget.Toast
+import dev.seokbeomkim.orgroid.parser.OrgParser
 import java.util.TimeZone
+import kotlin.collections.ArrayList
 
 /**
  * A class for managing calendars in the Android CalendarContract.
@@ -16,58 +19,100 @@ import java.util.TimeZone
  * The essential functions is to provide APIs to manage local calendars and every events associated with them.
  */
 class CalendarHelper {
-    val CALENDAR_NAME: String = "orgroid"
-
-    var calendars: ArrayList<EventItem>
-    lateinit var appMainContext: Context
+    private lateinit var calendars: ArrayList<CalendarItem>
+    var dateType: PreferredDateType = PreferredDateType.DATE_MODE_A
+    private val accountName = "orgroid"
 
     companion object {
         @Volatile
         private var instance: CalendarHelper? = null
 
-        fun getInstace(): CalendarHelper {
+        fun getInstance(): CalendarHelper {
             return instance ?: synchronized(this) {
                 instance ?: CalendarHelper().also { instance = it }
             }
         }
     }
 
-    constructor() {
-        this.calendars = ArrayList()
-    }
-
-    fun setMainAppContext(context: Context) {
-        instance?.appMainContext = context
-    }
-
-    fun getCalendarArrayList(): ArrayList<EventItem> {
-        return calendars
+    /*
+     * There are two possible use-cases of using SCHEDULED/DEADLINE in org.
+     * First is using SCHEDULED as start date and DEADLINE as end date.
+     * Second is using SCHEDULED and DEADLINE within the different meaning. In this case, each must
+     * have its own range of date. Therefore, the return value must be pair (SCHEDULED/DEADLINE).
+     *
+     * TODO
+     *  For now, I will make this PreferredDateType as a global parameter to make it simple and
+     *  avoid the complexity. But if someone asks to change this feature to be configured in each,
+     *  this needs to be reconsidered.
+     */
+    enum class PreferredDateType {
+        DATE_MODE_A,
+        DATE_MODE_B,
     }
 
     /**
      * Initialize calendar array list with the local calendars
      */
-    fun initCalendarArrayList() {
-        getCalendarListByContentResolver(this.appMainContext).forEach(
-            fun(hash: HashMap<String, Any>) {
-                println("account name: ${hash[CalendarContract.Calendars.ACCOUNT_NAME]}")
-                println("display name: ${hash[CalendarContract.Calendars.CALENDAR_DISPLAY_NAME]}")
-                println("calendar id: ${hash[CalendarContract.Calendars._ID]}")
+    fun updateCalendarArrayList(context: Context, orgroidOnly: Boolean = false) {
+        this.calendars = ArrayList()
 
-                var newItem = EventItem()
-                newItem.setTitle("${hash[CalendarContract.Calendars.CALENDAR_DISPLAY_NAME]}")
-                newItem.setDescription("${hash[CalendarContract.Calendars.ACCOUNT_NAME]}")
-                this.calendars.add(newItem)
+        getCalendarListByContentResolver(context).forEach(
+            fun(hash: HashMap<String, Any>) {
+                val newItem = CalendarItem()
+                newItem.displayName = "${hash[CalendarContract.Calendars.CALENDAR_DISPLAY_NAME]}"
+                newItem.accountName = "${hash[CalendarContract.Calendars.ACCOUNT_NAME]}"
+                newItem.id = hash[CalendarContract.Calendars._ID] as Long
+
+                if (orgroidOnly) {
+                    if (newItem.accountName == this.accountName) {
+                        this.calendars.add(newItem)
+                    }
+                } else {
+                    this.calendars.add(newItem)
+                }
             }
         )
     }
 
-    fun createCalendar(context: Context, accountName: String, calendarName: String): Long {
+    fun getCalendarIdByName(context: Context, calendarName: String): Long? {
+        val uri: Uri = CalendarContract.Calendars.CONTENT_URI
+        val projection = arrayOf(CalendarContract.Calendars._ID)
+        val selection = "${CalendarContract.Calendars.CALENDAR_DISPLAY_NAME} = ?"
+        val selectionArgs = arrayOf(calendarName)
+
+        val cursor: Cursor? =
+            context.contentResolver.query(uri, projection, selection, selectionArgs, null)
+
+        val calendarId: Long? = if (cursor != null && cursor.moveToFirst()) {
+            val columnIndex = cursor.getColumnIndex(CalendarContract.Calendars._ID)
+            if (columnIndex != 1) {
+                cursor.getLong(columnIndex)
+            } else {
+                null
+            }
+        } else {
+            null // Return null if the calendar does not exist
+        }
+
+        return calendarId
+    }
+
+    fun createCalendar(
+        context: Context,
+        calendarName: String,
+        accountName: String = this.accountName,
+    ): Long {
+
+        val calendarId = this.getCalendarIdByName(context, calendarName)
+        if (calendarId != null) {
+            return calendarId
+        }
+
         val cr: ContentResolver = context.contentResolver
         val values = ContentValues().apply {
             put(CalendarContract.Calendars.ACCOUNT_NAME, accountName)
             put(CalendarContract.Calendars.ACCOUNT_TYPE, CalendarContract.ACCOUNT_TYPE_LOCAL)
-            put(CalendarContract.Calendars.NAME, CALENDAR_NAME)
+            put(CalendarContract.Calendars.NAME, calendarName)
             put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, calendarName)
             put(CalendarContract.Calendars.CALENDAR_COLOR, 0xFF00FF00.toInt())
             put(
@@ -79,7 +124,7 @@ class CalendarHelper {
             put(CalendarContract.Calendars.VISIBLE, 1)
         }
 
-        var uri: Uri = CalendarContract.Calendars.CONTENT_URI.buildUpon()
+        val uri: Uri = CalendarContract.Calendars.CONTENT_URI.buildUpon()
             .appendQueryParameter(CalendarContract.CALLER_IS_SYNCADAPTER, "true")
             .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_NAME, accountName)
             .appendQueryParameter(
@@ -92,33 +137,49 @@ class CalendarHelper {
         return newUri?.let { ContentUris.parseId(it) } ?: -1
     }
 
-    fun addEventToCalendar(
+    private fun addEventToCalendar(
         context: Context,
         title: String?,
         description: String?,
-        startTime: Long,
-        endTime: Long
+        startTime: Long?,
+        endTime: Long?,
+        calendarId: Long? = null
     ) {
         val cr = context.contentResolver
         val values = ContentValues()
+        var title = title
+        var endTime = endTime
 
-        val calendarId = 1
+        if (calendarId == null) {
+            return
+        }
+
+        if (title == null) {
+            title = "No title"
+        }
+
+        if (endTime == null) {
+            endTime = startTime
+        }
+
         values.put(CalendarContract.Events.CALENDAR_ID, calendarId)
         values.put(CalendarContract.Events.TITLE, title)
         values.put(CalendarContract.Events.DESCRIPTION, description)
         values.put(CalendarContract.Events.DTSTART, startTime)
         values.put(CalendarContract.Events.DTEND, endTime)
-        values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID())
+        values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
         values.put(CalendarContract.Events.EVENT_LOCATION, "Online")
-        values.put(CalendarContract.Events.HAS_ALARM, 1) // 알람 설정
+        values.put(CalendarContract.Events.HAS_ALARM, 1)
 
         val uri = cr.insert(CalendarContract.Events.CONTENT_URI, values)
 
         if (uri != null) {
             val eventId = ContentUris.parseId(uri)
-            Toast.makeText(context, "Event added with ID: $eventId", Toast.LENGTH_SHORT).show()
+            // Toast.makeText(context, "Event added with ID: $eventId", Toast.LENGTH_SHORT).show()
+            Log.d("CalendarHelper", "Event added with ID: $eventId")
         } else {
-            Toast.makeText(context, "Failed to add event", Toast.LENGTH_SHORT).show()
+            // Toast.makeText(context, "Failed to add event", Toast.LENGTH_SHORT).show()
+            Log.d("CalendarHelper", "Failed to add event")
         }
     }
 
@@ -147,7 +208,7 @@ class CalendarHelper {
         }
     }
 
-    fun getCalendarListByContentResolver(context: Context): List<HashMap<String, Any>> {
+    private fun getCalendarListByContentResolver(context: Context): List<HashMap<String, Any>> {
         val cr: ContentResolver = context.contentResolver
         val uri: Uri = CalendarContract.Calendars.CONTENT_URI
         val projection = arrayOf(
@@ -161,7 +222,7 @@ class CalendarHelper {
         val calendars = mutableListOf<HashMap<String, Any>>()
         cursor?.use {
             while (it.moveToNext()) {
-                var newItem = HashMap<String, Any>()
+                val newItem = HashMap<String, Any>()
                 newItem[CalendarContract.Calendars._ID] = it.getLong(0)
                 newItem[CalendarContract.Calendars.CALENDAR_DISPLAY_NAME] = it.getString(1)
                 newItem[CalendarContract.Calendars.ACCOUNT_NAME] = it.getString(2)
@@ -171,5 +232,50 @@ class CalendarHelper {
             }
         }
         return calendars
+    }
+
+    fun getCalendarArrayList(): ArrayList<CalendarItem> {
+        return this.calendars
+    }
+
+    fun addEventsByParser(
+        parser: OrgParser, context: Context,
+        scheduleCalendar: Long?, deadlineCalendar: Long?
+    ) {
+        when (this.dateType) {
+            PreferredDateType.DATE_MODE_A -> {
+                parser.getItems().forEach { x ->
+                    this.addEventToCalendar(
+                        context,
+                        title = x.title,
+                        description = x.body,
+                        startTime = x.scheduled?.start?.toInstant()?.toEpochMilli(),
+                        endTime = x.deadline?.start?.toInstant()?.toEpochMilli(),
+                        scheduleCalendar
+                    )
+                }
+            }
+
+            PreferredDateType.DATE_MODE_B -> {
+                parser.getItems().forEach { x ->
+                    this.addEventToCalendar(
+                        context,
+                        title = x.title,
+                        description = x.body,
+                        startTime = x.scheduled?.start?.toInstant()?.toEpochMilli(),
+                        endTime = x.scheduled?.end?.toInstant()?.toEpochMilli(),
+                        scheduleCalendar
+                    )
+                    this.addEventToCalendar(
+                        context,
+                        title = x.title,
+                        description = x.body,
+                        startTime = x.deadline?.start?.toInstant()?.toEpochMilli(),
+                        endTime = x.deadline?.end?.toInstant()?.toEpochMilli(),
+                        deadlineCalendar
+                    )
+                }
+            }
+        }
     }
 }

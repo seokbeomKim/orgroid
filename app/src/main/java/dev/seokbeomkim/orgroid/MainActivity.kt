@@ -8,7 +8,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import dev.seokbeomkim.orgroid.databinding.ActivityMainBinding
-import dev.seokbeomkim.orgtodo.calendar.CalendarHelper
+import dev.seokbeomkim.orgroid.calendar.CalendarHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,9 +22,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Initialize CalendarHelper which must be initialized before anything else (singleton)
-        calendarHelper = CalendarHelper.getInstace()
-        calendarHelper.setMainAppContext(applicationContext)
-        calendarHelper.initCalendarArrayList()
+        calendarHelper = CalendarHelper.getInstance()
+        calendarHelper.updateCalendarArrayList(applicationContext)
 
         val navView: BottomNavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
