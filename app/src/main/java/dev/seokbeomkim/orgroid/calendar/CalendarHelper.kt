@@ -10,6 +10,7 @@ import android.provider.CalendarContract
 import android.util.Log
 import android.widget.Toast
 import dev.seokbeomkim.orgroid.parser.OrgParser
+import java.time.ZonedDateTime
 import java.util.TimeZone
 import kotlin.collections.ArrayList
 
@@ -245,12 +246,16 @@ class CalendarHelper {
         when (this.dateType) {
             PreferredDateType.DATE_MODE_A -> {
                 parser.getItems().forEach { x ->
+
+                    val early = x.getStartDate()
+                    val late = x.getEndDate()
+
                     this.addEventToCalendar(
                         context,
                         title = x.title,
                         description = x.body,
-                        startTime = x.scheduled?.start?.toInstant()?.toEpochMilli(),
-                        endTime = x.deadline?.start?.toInstant()?.toEpochMilli(),
+                        startTime = early?.early()?.toInstant()?.toEpochMilli(),
+                        endTime = late?.late()?.toInstant()?.toEpochMilli(),
                         scheduleCalendar
                     )
                 }

@@ -60,7 +60,27 @@ class CalendarHelperTest {
     }
 
     @Test
-    fun calendarHelperEventCreationTest() {
+    fun calendarHelperEventCreationModeATest() {
+        val context = InstrumentationRegistry.getInstrumentation().context
+        val stream = context.assets.open("test.org")
+        val parser = OrgParser()
+        parser.open(stream)
+        parser.parse(mustDefineSchedule = false, mustDefineDeadline = false)
+        Log.d("CalendarHelperTest", "Events: $parser")
+
+        val helper = CalendarHelper.getInstance()
+
+        val scheduleId = helper.createCalendar(context, "Orgroid (Scheduled)")
+        val deadlineId = helper.createCalendar(context, "Orgroid (deadline)")
+
+        helper.updateCalendarArrayList(context, true)
+
+        helper.dateType = CalendarHelper.PreferredDateType.DATE_MODE_A
+        helper.addEventsByParser(parser, context, scheduleId, deadlineId)
+    }
+
+    @Test
+    fun calendarHelperEventCreationModeBTest() {
         val context = InstrumentationRegistry.getInstrumentation().context
         val stream = context.assets.open("test.org")
         val parser = OrgParser()

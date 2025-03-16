@@ -92,6 +92,10 @@ class OrgParser {
                 .withYear(matched.groupValues[1].toInt())
                 .withMonth(matched.groupValues[2].toInt())
                 .withDayOfMonth(matched.groupValues[3].toInt())
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0)
             item.end = item.start
         } else {
             println("No match found: $date")
@@ -254,6 +258,8 @@ class OrgParser {
                 } else {
                     rValue.body += "\n$line"
                 }
+
+                rValue?.body = rValue?.body?.trimStart('\n')?.trimEnd('\n').toString()
             }
         }
 
@@ -272,7 +278,8 @@ class OrgParser {
                 newItem = this.parseLine(cursor, line)
                 if ((cursor != null) && (cursor != newItem)) {
                     if ((mustDefineSchedule && cursor?.scheduled == null) ||
-                        (mustDefineDeadline && cursor?.deadline == null)
+                        (mustDefineDeadline && cursor?.deadline == null) ||
+                        (cursor?.scheduled == null && cursor?.deadline == null)
                     ) {
                         items.remove(cursor)
                     }
@@ -285,7 +292,9 @@ class OrgParser {
 
         // handle the last one
         items.lastOrNull { x ->
-            (mustDefineSchedule && x.scheduled == null) || (mustDefineDeadline && x.deadline == null)
+            (mustDefineSchedule && x.scheduled == null)
+                    || (mustDefineDeadline && x.deadline == null)
+                    || (cursor?.scheduled == null && cursor?.deadline == null)
         }?.let { x ->
             items.remove(x)
         }

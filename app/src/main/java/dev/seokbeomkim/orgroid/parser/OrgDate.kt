@@ -60,4 +60,40 @@ class OrgDate {
             end = date.end
         }
     }
+
+    fun early(): ZonedDateTime? {
+        if (start == null && end == null) {
+            return null
+        } else if (start == null) {
+            return end
+        } else if (end == null) {
+            return start
+        } else {
+            if (start!!.isBefore(end)) {
+                return start
+            } else {
+                return end
+            }
+        }
+    }
+
+    fun late(): ZonedDateTime? {
+        if (start == null && end == null) {
+            return null
+        } else if (start == null) {
+            return end
+        } else if (end == null) {
+            return start
+        } else {
+            if (start!!.isBefore(end)) {
+                return end
+            } else {
+                return start
+            }
+        }
+    }
+
+    operator fun compareTo(target: OrgDate): Int {
+        return this.early()!!.compareTo(target.early())
+    }
 }
