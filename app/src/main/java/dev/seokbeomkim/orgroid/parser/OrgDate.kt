@@ -63,33 +63,33 @@ class OrgDate {
     }
 
     fun early(): ZonedDateTime? {
-        if (start == null && end == null) {
-            return null
+        return if (start == null && end == null) {
+            null
         } else if (start == null) {
-            return end
+            end
         } else if (end == null) {
-            return start
+            start
         } else {
             if (start!!.isBefore(end)) {
-                return start
+                start
             } else {
-                return end
+                end
             }
         }
     }
 
     fun late(): ZonedDateTime? {
-        if (start == null && end == null) {
-            return null
+        return if (start == null && end == null) {
+            null
         } else if (start == null) {
-            return end
+            end
         } else if (end == null) {
-            return start
+            start
         } else {
             if (start!!.isBefore(end)) {
-                return end
+                end
             } else {
-                return start
+                start
             }
         }
     }

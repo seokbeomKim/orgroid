@@ -8,45 +8,44 @@ class OrgItem {
     var status: String = ""
     var body: String = ""
     var priority: String = ""
-    var properties: MutableMap<String, String> = mutableMapOf()
     var progress: String = ""
     var scheduled: OrgDate? = null
     var deadline: OrgDate? = null
 
     fun getStartDate(): OrgDate? {
-        val cand1 = scheduled
-        val cand2 = deadline
+        val candidate1 = scheduled
+        val candidate2 = deadline
 
-        return if (cand1 == null && cand2 == null) {
+        return if (candidate1 == null && candidate2 == null) {
             null
-        } else if (cand1 == null) {
-            cand2
-        } else if (cand2 == null) {
-            cand1
+        } else if (candidate1 == null) {
+            candidate2
+        } else if (candidate2 == null) {
+            candidate1
         } else {
-            if (cand1 < cand2) {
-                cand1
+            if (candidate1 < candidate2) {
+                candidate1
             } else {
-                cand2
+                candidate2
             }
         }
     }
 
     fun getEndDate(): OrgDate? {
-        val cand1 = scheduled
-        val cand2 = deadline
+        val candidate1 = scheduled
+        val candidate2 = deadline
 
-        return if (cand1 == null && cand2 == null) {
+        return if (candidate1 == null && candidate2 == null) {
             null
-        } else if (cand1 == null) {
-            cand2
-        } else if (cand2 == null) {
-            cand1
+        } else if (candidate1 == null) {
+            candidate2
+        } else if (candidate2 == null) {
+            candidate1
         } else {
-            if (cand1 > cand2) {
-                cand1
+            if (candidate1 > candidate2) {
+                candidate1
             } else {
-                cand2
+                candidate2
             }
         }
     }

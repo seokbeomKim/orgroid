@@ -13,7 +13,6 @@ import dev.seokbeomkim.orgroid.parser.OrgParser
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.Calendar
 import java.util.TimeZone
 
 /**
@@ -148,7 +147,6 @@ class CalendarHelper {
         val cr = context.contentResolver
         val values = ContentValues()
         var shadowedTitle = title
-        var shadowedEndTime = endTime
 
         if (calendarId == null) {
             return
@@ -158,11 +156,11 @@ class CalendarHelper {
             shadowedTitle = "No title"
         }
 
-        if (startTime == null && shadowedEndTime == null) {
+        if (startTime == null && endTime == null) {
             return
         }
 
-        if (shadowedEndTime == startTime) {
+        if (endTime == startTime) {
             var zonedStart =
                 ZonedDateTime.ofInstant(Instant.ofEpochMilli(startTime!!), ZoneId.systemDefault())
                     .withHour(0).withMinute(0).withSecond(0).withNano(0)
@@ -179,7 +177,7 @@ class CalendarHelper {
             var zonedStart =
                 ZonedDateTime.ofInstant(Instant.ofEpochMilli(startTime!!), ZoneId.systemDefault())
             var zoneEnd = ZonedDateTime.ofInstant(
-                Instant.ofEpochMilli(shadowedEndTime!!),
+                Instant.ofEpochMilli(endTime!!),
                 ZoneId.systemDefault()
             )
 
@@ -197,7 +195,7 @@ class CalendarHelper {
                 )
             } else {
                 values.put(CalendarContract.Events.DTSTART, startTime)
-                values.put(CalendarContract.Events.DTEND, shadowedEndTime)
+                values.put(CalendarContract.Events.DTEND, endTime)
             }
         }
 
