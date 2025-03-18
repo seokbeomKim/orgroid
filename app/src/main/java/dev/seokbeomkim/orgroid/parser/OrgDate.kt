@@ -5,6 +5,7 @@ import java.time.ZonedDateTime
 class OrgDate {
     var start: ZonedDateTime? = null
     var end: ZonedDateTime? = null
+    var isAllDay: Boolean = false
 
     /**
      * Actually, we do not need to consider how to handle repeat type.

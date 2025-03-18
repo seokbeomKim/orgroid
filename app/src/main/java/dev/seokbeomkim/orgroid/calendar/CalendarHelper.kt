@@ -10,9 +10,11 @@ import android.provider.CalendarContract
 import android.util.Log
 import android.widget.Toast
 import dev.seokbeomkim.orgroid.parser.OrgParser
+import java.time.Instant
+import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Calendar
 import java.util.TimeZone
-import kotlin.collections.ArrayList
 
 /**
  * A class for managing calendars in the Android CalendarContract.
@@ -47,8 +49,7 @@ class CalendarHelper {
      *  this needs to be reconsidered.
      */
     enum class PreferredDateType {
-        DATE_MODE_A,
-        DATE_MODE_B,
+        DATE_MODE_A, DATE_MODE_B,
     }
 
     /**
@@ -57,25 +58,23 @@ class CalendarHelper {
     fun updateCalendarArrayList(context: Context, orgroidOnly: Boolean = false) {
         this.calendars = ArrayList()
 
-        getCalendarListByContentResolver(context).forEach(
-            fun(hash: HashMap<String, Any>) {
-                val newItem = CalendarItem()
-                newItem.displayName = "${hash[CalendarContract.Calendars.CALENDAR_DISPLAY_NAME]}"
-                newItem.accountName = "${hash[CalendarContract.Calendars.ACCOUNT_NAME]}"
-                newItem.id = hash[CalendarContract.Calendars._ID] as Long
+        getCalendarListByContentResolver(context).forEach(fun(hash: HashMap<String, Any>) {
+            val newItem = CalendarItem()
+            newItem.displayName = "${hash[CalendarContract.Calendars.CALENDAR_DISPLAY_NAME]}"
+            newItem.accountName = "${hash[CalendarContract.Calendars.ACCOUNT_NAME]}"
+            newItem.id = hash[CalendarContract.Calendars._ID] as Long
 
-                if (orgroidOnly) {
-                    if (newItem.accountName == this.accountName) {
-                        this.calendars.add(newItem)
-                    }
-                } else {
+            if (orgroidOnly) {
+                if (newItem.accountName == this.accountName) {
                     this.calendars.add(newItem)
                 }
+            } else {
+                this.calendars.add(newItem)
             }
-        )
+        })
     }
 
-    fun getCalendarIdByName(context: Context, calendarName: String): Long? {
+    private fun getCalendarIdByName(context: Context, calendarName: String): Long? {
         val uri: Uri = CalendarContract.Calendars.CONTENT_URI
         val projection = arrayOf(CalendarContract.Calendars._ID)
         val selection = "${CalendarContract.Calendars.CALENDAR_DISPLAY_NAME} = ?"
@@ -94,6 +93,8 @@ class CalendarHelper {
         } else {
             null // Return null if the calendar does not exist
         }
+
+        cursor?.close()
 
         return calendarId
     }
@@ -129,10 +130,8 @@ class CalendarHelper {
             .appendQueryParameter(CalendarContract.CALLER_IS_SYNCADAPTER, "true")
             .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_NAME, accountName)
             .appendQueryParameter(
-                CalendarContract.Calendars.ACCOUNT_TYPE,
-                CalendarContract.ACCOUNT_TYPE_LOCAL
-            )
-            .build()
+                CalendarContract.Calendars.ACCOUNT_TYPE, CalendarContract.ACCOUNT_TYPE_LOCAL
+            ).build()
 
         val newUri: Uri? = cr.insert(uri, values)
         return newUri?.let { ContentUris.parseId(it) } ?: -1
@@ -148,26 +147,63 @@ class CalendarHelper {
     ) {
         val cr = context.contentResolver
         val values = ContentValues()
-        var title = title
-        var endTime = endTime
+        var shadowedTitle = title
+        var shadowedEndTime = endTime
 
         if (calendarId == null) {
             return
         }
 
-        if (title == null) {
-            title = "No title"
+        if (shadowedTitle == null) {
+            shadowedTitle = "No title"
         }
 
-        if (endTime == null) {
-            endTime = startTime
+        if (startTime == null && shadowedEndTime == null) {
+            return
+        }
+
+        if (shadowedEndTime == startTime) {
+            var zonedStart =
+                ZonedDateTime.ofInstant(Instant.ofEpochMilli(startTime!!), ZoneId.systemDefault())
+                    .withHour(0).withMinute(0).withSecond(0).withNano(0)
+
+            zonedStart = zonedStart.withZoneSameLocal(ZoneId.of("UTC"))
+            val zonedEnd = zonedStart.plusDays(1)
+            println(zonedStart.toString())
+            println(zonedEnd.toString())
+
+            values.put(CalendarContract.Events.ALL_DAY, true)
+            values.put(CalendarContract.Events.DTSTART, zonedStart.toInstant().toEpochMilli())
+            values.put(CalendarContract.Events.DTEND, zonedEnd.toInstant().toEpochMilli())
+        } else {
+            var zonedStart =
+                ZonedDateTime.ofInstant(Instant.ofEpochMilli(startTime!!), ZoneId.systemDefault())
+            var zoneEnd = ZonedDateTime.ofInstant(
+                Instant.ofEpochMilli(shadowedEndTime!!),
+                ZoneId.systemDefault()
+            )
+
+            if (zonedStart.hour == 0 && zonedStart.minute == 0 && zonedStart.second == 0 && zonedStart.nano == 0 &&
+                zoneEnd.hour == 0 && zoneEnd.minute == 0 && zoneEnd.second == 0 && zoneEnd.nano == 0
+            ) {
+                zonedStart = zonedStart.withZoneSameLocal(ZoneId.of("UTC"))
+                zoneEnd = zoneEnd.withZoneSameLocal(ZoneId.of("UTC"))
+
+                values.put(CalendarContract.Events.ALL_DAY, true)
+                values.put(CalendarContract.Events.DTSTART, zonedStart.toInstant().toEpochMilli())
+                values.put(
+                    CalendarContract.Events.DTEND,
+                    zoneEnd.toInstant().toEpochMilli() + 24 * 60 * 60 * 1000
+                )
+            } else {
+                values.put(CalendarContract.Events.DTSTART, startTime)
+                values.put(CalendarContract.Events.DTEND, shadowedEndTime)
+            }
         }
 
         values.put(CalendarContract.Events.CALENDAR_ID, calendarId)
-        values.put(CalendarContract.Events.TITLE, title)
+        values.put(CalendarContract.Events.TITLE, shadowedTitle)
         values.put(CalendarContract.Events.DESCRIPTION, description)
-        values.put(CalendarContract.Events.DTSTART, startTime)
-        values.put(CalendarContract.Events.DTEND, endTime)
         values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
         values.put(CalendarContract.Events.EVENT_LOCATION, "Online")
         values.put(CalendarContract.Events.HAS_ALARM, 1)
@@ -240,8 +276,7 @@ class CalendarHelper {
     }
 
     fun addEventsByParser(
-        parser: OrgParser, context: Context,
-        scheduleCalendar: Long?, deadlineCalendar: Long?
+        parser: OrgParser, context: Context, scheduleCalendar: Long?, deadlineCalendar: Long?
     ) {
         when (this.dateType) {
             PreferredDateType.DATE_MODE_A -> {
@@ -256,7 +291,7 @@ class CalendarHelper {
                         description = x.body,
                         startTime = early?.early()?.toInstant()?.toEpochMilli(),
                         endTime = late?.late()?.toInstant()?.toEpochMilli(),
-                        scheduleCalendar
+                        scheduleCalendar,
                     )
                 }
             }

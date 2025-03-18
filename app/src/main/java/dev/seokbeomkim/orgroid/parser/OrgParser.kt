@@ -4,6 +4,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.InputStream
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 /**
@@ -96,7 +97,9 @@ class OrgParser {
                 .withMinute(0)
                 .withSecond(0)
                 .withNano(0)
+
             item.end = item.start
+            item.isAllDay = true
         } else {
             println("No match found: $date")
         }
@@ -114,6 +117,7 @@ class OrgParser {
             item.end = item.end
                 ?.withHour(matched.groupValues[3].toInt())
                 ?.withMinute(matched.groupValues[4].toInt())
+            item.isAllDay = false
         } else {
             regex = Regex("""(\d{2}):(\d{2})""")
             matched = regex.find(date)
@@ -122,6 +126,7 @@ class OrgParser {
                     ?.withHour(matched.groupValues[1].toInt())
                     ?.withMinute(matched.groupValues[2].toInt())
                 item.end = item.start
+                item.isAllDay = false
             }
         }
 

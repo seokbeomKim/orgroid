@@ -85,7 +85,7 @@ class CalendarHelperTest {
         val stream = context.assets.open("test.org")
         val parser = OrgParser()
         parser.open(stream)
-        parser.parse(mustDefineSchedule = true, mustDefineDeadline = true)
+        parser.parse(mustDefineSchedule = false, mustDefineDeadline = false)
         Log.d("CalendarHelperTest", "Events: $parser")
 
         val helper = CalendarHelper.getInstance()
