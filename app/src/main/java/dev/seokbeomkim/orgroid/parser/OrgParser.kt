@@ -303,4 +303,8 @@ class OrgParser {
             items.remove(x)
         }
     }
+
+    fun flush() {
+        items = mutableListOf()
+    }
 }

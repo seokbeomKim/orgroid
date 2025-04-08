@@ -1,8 +1,11 @@
 package dev.seokbeomkim.orgroid.ui.calendars
 
+import android.provider.CalendarContract
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.fragment.app.findFragment
 import androidx.recyclerview.widget.RecyclerView
+import dev.seokbeomkim.orgroid.calendar.CalendarHelper
 import dev.seokbeomkim.orgroid.calendar.CalendarItem
 import dev.seokbeomkim.orgroid.databinding.CalendarsRecyclerViewRowBinding
 
@@ -13,8 +16,27 @@ class CalendarsRecyclerViewAdapter(val items: ArrayList<CalendarItem>) :
         RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
-//                pitemClickListener?.OnItemClick(items[adapterPosition].url)
                 println("setOnClickListener: position = $adapterPosition")
+            }
+
+            binding.calendarRowEditBtn.setOnClickListener {
+                val helper = CalendarHelper.getInstance()
+                val contentValues =
+                    helper.getCalendarContentValuesById(itemView.context, items[adapterPosition].id)
+
+                val fragment = binding.root.findFragment<CalendarsFragment>()
+                fragment.showDialogToEditCalendar(
+                    itemView.context,
+                    items[adapterPosition].id,
+                    contentValues?.get(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME).toString(),
+                    contentValues?.get(CalendarContract.Calendars.CALENDAR_COLOR).toString().toInt()
+                )
+
+                println("title: ${items[adapterPosition].displayName}")
+            }
+
+            binding.calendarRowRemoveBtn.setOnClickListener {
+                println("remove button clicked: position = ${adapterPosition}")
             }
         }
     }
@@ -28,6 +50,7 @@ class CalendarsRecyclerViewAdapter(val items: ArrayList<CalendarItem>) :
             parent,
             false
         )
+
         return ViewHolder(view)
     }
 

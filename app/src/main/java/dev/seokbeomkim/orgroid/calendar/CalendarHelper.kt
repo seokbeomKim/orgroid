@@ -3,6 +3,7 @@ package dev.seokbeomkim.orgroid.calendar
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
@@ -54,7 +55,7 @@ class CalendarHelper {
     /**
      * Initialize calendar array list with the local calendars
      */
-    fun updateCalendarArrayList(context: Context, orgroidOnly: Boolean = false) {
+    fun updateCalendarArrayList(context: Context, orgroidOnly: Boolean = true) {
         this.calendars = ArrayList()
 
         getCalendarListByContentResolver(context).forEach(fun(hash: HashMap<String, Any>) {
@@ -71,6 +72,43 @@ class CalendarHelper {
                 this.calendars.add(newItem)
             }
         })
+    }
+
+    fun getCalendarContentValuesById(context: Context, calendarId: Long): ContentValues? {
+        val uri = CalendarContract.Calendars.CONTENT_URI
+        val projection = arrayOf(
+            CalendarContract.Calendars._ID,
+            CalendarContract.Calendars.NAME,
+            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+            CalendarContract.Calendars.ACCOUNT_NAME,
+            CalendarContract.Calendars.ACCOUNT_TYPE,
+            CalendarContract.Calendars.OWNER_ACCOUNT,
+            CalendarContract.Calendars.CALENDAR_COLOR,
+            CalendarContract.Calendars.VISIBLE,
+            CalendarContract.Calendars.SYNC_EVENTS
+        )
+        val selection = "${CalendarContract.Calendars._ID} = ?"
+        val selectionArgs = arrayOf(calendarId.toString())
+
+        context.contentResolver.query(uri, projection, selection, selectionArgs, null)
+            ?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val values = ContentValues()
+                    for (i in projection.indices) {
+                        val column = projection[i]
+                        val value = when (cursor.getType(i)) {
+                            Cursor.FIELD_TYPE_STRING -> cursor.getString(i)
+                            Cursor.FIELD_TYPE_INTEGER -> cursor.getLong(i)
+                            Cursor.FIELD_TYPE_FLOAT -> cursor.getDouble(i)
+                            Cursor.FIELD_TYPE_BLOB -> cursor.getBlob(i)
+                            else -> null
+                        }
+                        values.put(column, value?.toString())
+                    }
+                    return values
+                }
+            }
+        return null
     }
 
     private fun getCalendarIdByName(context: Context, calendarName: String): Long? {
@@ -98,10 +136,33 @@ class CalendarHelper {
         return calendarId
     }
 
+    fun editCalendar(
+        context: Context,
+        calendarId: Long,
+        calendarName: String,
+        calendarColor: Int
+    ) {
+        val cr: ContentResolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(CalendarContract.Calendars.NAME, calendarName)
+            put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, calendarName)
+            put(CalendarContract.Calendars.CALENDAR_COLOR, calendarColor)
+        }
+        val uri: Uri =
+            ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarId)
+        val rowsUpdated = cr.update(uri, values, null, null)
+        if (rowsUpdated > 0) {
+            Log.d(TAG, "Calendar updated successfully")
+        } else {
+            Log.d(TAG, "Failed to update calendar")
+        }
+    }
+
     fun createCalendar(
         context: Context,
         calendarName: String,
         accountName: String = this.accountName,
+        calendarColor: Int = 0xFF00FF00.toInt()
     ): Long {
 
         val calendarId = this.getCalendarIdByName(context, calendarName)
@@ -115,7 +176,7 @@ class CalendarHelper {
             put(CalendarContract.Calendars.ACCOUNT_TYPE, CalendarContract.ACCOUNT_TYPE_LOCAL)
             put(CalendarContract.Calendars.NAME, calendarName)
             put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, calendarName)
-            put(CalendarContract.Calendars.CALENDAR_COLOR, 0xFF00FF00.toInt())
+            put(CalendarContract.Calendars.CALENDAR_COLOR, calendarColor)
             put(
                 CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL,
                 CalendarContract.Calendars.CAL_ACCESS_OWNER

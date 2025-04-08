@@ -16,6 +16,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            name = "ColorPicker"
+            url = uri("https://github.com/MohammedAlaaMorsi/Color-Picker-KMP.git")
+        }
     }
 }
 

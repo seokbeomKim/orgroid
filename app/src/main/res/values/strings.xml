@@ -6,4 +6,14 @@
 
     <string name="calendars_button_open">Add an org document</string>
     <string name="calendars_label_calendar_list">Calendar Lists</string>
+    <string name="calendars_label_no_calendars">No Orgroid calendars</string>
+
+    <string name="dialog_create_calendar_title">Import a org document</string>
+    <string name="dialog_create_calendar_label_calendar_name">Name</string>
+    <string name="dialog_create_calendar_label_calendar_color">Color</string>
+
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="dialog_create_calendar_hint_calendar_name">Calendar name</string>
+    <string name="dialog_create_calendar_hint_calendar_color">Choose</string>
 </resources>

@@ -8,6 +8,7 @@ import android.provider.OpenableColumns
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import dev.seokbeomkim.orgroid.calendar.CalendarHelper
 import dev.seokbeomkim.orgroid.parser.OrgParser
 import java.io.File
 
@@ -49,18 +50,57 @@ class CalendarsViewModel : ViewModel() {
         return filePath
     }
 
-    fun tryToParseOrgFile(fullPath: String?) {
+    /**
+     * Try to parse the org file and show the result in a dialog.
+     * @param context The context of the activity.
+     * @param fullPath The path of org file
+     * @return True if the org file is parsed successfully, false otherwise.
+     */
+    fun tryToParseOrgFile(context: Context, fullPath: String?): Boolean {
+        parser.flush()
+
         if (fullPath != null) {
             val file = File(fullPath)
             if (file.exists()) {
                 parser.open(file)
                 parser.parse()
-                println(parser)
             } else {
                 Log.e(TAG, "tryToParseOrgFile: the file ($fullPath) does not exist!")
             }
         } else {
             Log.e(TAG, "tryToParseOrgFile: fullPath is null")
         }
+
+        return parser.getItems().isNotEmpty()
+    }
+
+    fun createCalendar(context: Context, calendarName: String, calendarColor: Int) {
+        Log.d(TAG, "createCalendar: $calendarName, $calendarColor")
+
+        val helper = CalendarHelper.getInstance()
+        val scheduleId = helper.createCalendar(context, calendarName, calendarColor = calendarColor)
+
+        helper.updateCalendarArrayList(context, true)
+
+        helper.dateType = CalendarHelper.PreferredDateType.DATE_MODE_B
+        helper.addEventsByParser(
+            parser,
+            context,
+            scheduleCalendar = scheduleId,
+            deadlineCalendar = null
+        )
+    }
+
+    fun editCalendar(
+        requireContext: Context,
+        calendarId: Long,
+        calendarName: String,
+        calendarColor: Int
+    ) {
+        Log.d("orgroid", "editCalendar: $calendarId, $calendarName, $calendarColor")
+
+        val helper = CalendarHelper.getInstance()
+        helper.editCalendar(requireContext, calendarId, calendarName, calendarColor)
+        helper.updateCalendarArrayList(requireContext, true)
     }
 }
