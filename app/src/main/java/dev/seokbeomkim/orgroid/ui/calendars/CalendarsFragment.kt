@@ -27,7 +27,7 @@ class CalendarsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: CalendarsViewModel by lazy {
-        ViewModelProvider(this).get(CalendarsViewModel::class.java)
+        ViewModelProvider(this)[CalendarsViewModel::class.java]
     }
 
     private fun initFindButton(findButton: Button) {
@@ -35,18 +35,15 @@ class CalendarsFragment : Fragment() {
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
                 uri?.let {
                     val (_, _) = viewModel.getFileNameAndExtension(
-                        this.requireContext(),
-                        uri
+                        this.requireContext(), uri
                     )
                     val fullPath = viewModel.getRealPathFromURI(this.requireContext(), uri)
                     if (viewModel.tryToParseOrgFile(this.requireContext(), fullPath)) {
                         showDialogToCreateCalendar(this.requireContext())
                     } else {
-                        AlertDialog.Builder(this.requireContext())
-                            .setTitle("Error")
+                        AlertDialog.Builder(this.requireContext()).setTitle("Error")
                             .setMessage("Failed to parse the org file. Please check the file.")
-                            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                            .show()
+                            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }.show()
                     }
                 }
             }
@@ -61,10 +58,7 @@ class CalendarsFragment : Fragment() {
     }
 
     fun showDialogToEditCalendar(
-        context: Context,
-        calendarId: Long,
-        calendarName: String,
-        calendarColor: Int
+        context: Context, calendarId: Long, calendarName: String, calendarColor: Int
     ) {
         val dialogToEditCalendar =
             layoutInflater.inflate(dev.seokbeomkim.orgroid.R.layout.dialog_create_calendar, null)
@@ -78,19 +72,16 @@ class CalendarsFragment : Fragment() {
 
         dialogToEditCalendar.findViewById<View>(dev.seokbeomkim.orgroid.R.id.view_calendar_color)
             .setOnClickListener {
-                val builder = ColorPickerDialog.Builder(context)
-                    .setTitle("Select a calendar color")
+                val builder = ColorPickerDialog.Builder(context).setTitle("Select a calendar color")
                     .setPositiveButton(
                         getString(dev.seokbeomkim.orgroid.R.string.confirm)
-                    ) { dialog, selectedColor -> dialog.dismiss() }
-                    .setNegativeButton(
+                    ) { dialog, selectedColor -> dialog.dismiss() }.setNegativeButton(
                         getString(dev.seokbeomkim.orgroid.R.string.cancel)
-                    ) { dialog, _ -> dialog.dismiss() }
-                    .attachAlphaSlideBar(false)
+                    ) { dialog, _ -> dialog.dismiss() }.attachAlphaSlideBar(false)
                     .attachBrightnessSlideBar(true) // the default value is true.
                     .setBottomSpace(12)
 
-                val colorPickerView = builder.getColorPickerView()
+                val colorPickerView = builder.colorPickerView
                 colorPickerView.setInitialColor(calendarColorHolder[0])
                 colorPickerView.setColorListener(ColorListener { color, _ ->
                     Log.d("Orgroid", "Color changed: $color")
@@ -102,25 +93,36 @@ class CalendarsFragment : Fragment() {
                 builder.show()
             }
 
-        val builder = AlertDialog.Builder(context)
-            .setView(dialogToEditCalendar)
-            .setPositiveButton(
-                "Edit",
-                { dialog, _ ->
-                    viewModel.editCalendar(
-                        this.requireContext(),
-                        calendarId,
-                        dialogToEditCalendar.findViewById<EditText>(dev.seokbeomkim.orgroid.R.id.edit_text_calendar_name).text.toString(),
-                        calendarColorHolder[0]
-                    )
-                    dialog.dismiss()
-                    updateCalendarList()
-                })
-            .setNegativeButton(
-                "Cancel",
-                { dialog, _ -> dialog.dismiss() }
+        val builder = AlertDialog.Builder(context).setView(dialogToEditCalendar).setPositiveButton(
+            "Edit"
+        ) { dialog, _ ->
+            viewModel.editCalendar(
+                this.requireContext(),
+                calendarId,
+                dialogToEditCalendar.findViewById<EditText>(dev.seokbeomkim.orgroid.R.id.edit_text_calendar_name).text.toString(),
+                calendarColorHolder[0]
             )
-            .create()
+            dialog.dismiss()
+            updateCalendarList()
+        }.setNegativeButton(
+            "Cancel"
+        ) { dialog, _ -> dialog.dismiss() }.create()
+
+        builder.show()
+    }
+
+    fun showDialogToRemoveCalendar(context: Context, calendarId: Long) {
+        val builder = AlertDialog.Builder(context).setTitle("Remove Calendar")
+            .setMessage("Are you sure you want to remove this calendar?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                val helper = CalendarHelper.getInstance()
+                helper.deleteCalendar(context, calendarId)
+                dialog.dismiss()
+                updateCalendarList()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
 
         builder.show()
     }
@@ -135,19 +137,16 @@ class CalendarsFragment : Fragment() {
 
         dialogToCreateCalendar.findViewById<View>(dev.seokbeomkim.orgroid.R.id.view_calendar_color)
             .setOnClickListener {
-                val builder = ColorPickerDialog.Builder(context)
-                    .setTitle("Select a calendar color")
+                val builder = ColorPickerDialog.Builder(context).setTitle("Select a calendar color")
                     .setPositiveButton(
                         getString(dev.seokbeomkim.orgroid.R.string.confirm)
-                    ) { dialog, selectedColor -> dialog.dismiss() }
-                    .setNegativeButton(
+                    ) { dialog, selectedColor -> dialog.dismiss() }.setNegativeButton(
                         getString(dev.seokbeomkim.orgroid.R.string.cancel)
-                    ) { dialog, _ -> dialog.dismiss() }
-                    .attachAlphaSlideBar(false)
+                    ) { dialog, _ -> dialog.dismiss() }.attachAlphaSlideBar(false)
                     .attachBrightnessSlideBar(true) // the default value is true.
                     .setBottomSpace(12)
 
-                val colorPickerView = builder.getColorPickerView()
+                val colorPickerView = builder.colorPickerView
                 colorPickerView.setInitialColor(selectedColor.color)
                 colorPickerView.setColorListener(ColorListener { color, _ ->
                     Log.d("Orgroid", "Color changed: $color")
@@ -158,33 +157,28 @@ class CalendarsFragment : Fragment() {
                 builder.show()
             }
 
-        val builder = AlertDialog.Builder(context)
-            .setView(dialogToCreateCalendar)
-            .setPositiveButton(
-                "Create",
-                { dialog, _ ->
-                    val calendarName =
-                        dialogToCreateCalendar.findViewById<EditText>(dev.seokbeomkim.orgroid.R.id.edit_text_calendar_name).text.toString()
-                    val calendarColor = selectedColor.color
+        val builder =
+            AlertDialog.Builder(context).setView(dialogToCreateCalendar).setPositiveButton(
+                "Create"
+            ) { dialog, _ ->
+                val calendarName =
+                    dialogToCreateCalendar.findViewById<EditText>(dev.seokbeomkim.orgroid.R.id.edit_text_calendar_name).text.toString()
+                val calendarColor = selectedColor.color
 
-                    viewModel.createCalendar(
-                        this.requireContext(),
-                        calendarName,
-                        calendarColor
-                    )
-                    dialog.dismiss()
-                    updateCalendarList()
-                })
-            .setNegativeButton(
-                "Cancel",
-                { dialog, _ -> dialog.dismiss() }
-            )
-            .create()
+                viewModel.createCalendar(
+                    this.requireContext(), calendarName, calendarColor
+                )
+                dialog.dismiss()
+                updateCalendarList()
+            }.setNegativeButton(
+                "Cancel"
+            ) { dialog, _ -> dialog.dismiss() }.create()
 
         builder.show()
     }
 
     private fun initCalendarList(calendarRecyclerView: RecyclerView) {
+        CalendarHelper.getInstance().updateCalendarArrayList(this.requireContext())
         val calendarsAdapter =
             CalendarsRecyclerViewAdapter(CalendarHelper.getInstance().getCalendarArrayList())
         calendarRecyclerView.layoutManager = LinearLayoutManager(this.requireContext())
@@ -200,9 +194,7 @@ class CalendarsFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCalendarsBinding.inflate(inflater, container, false)
         val root: View = binding.root

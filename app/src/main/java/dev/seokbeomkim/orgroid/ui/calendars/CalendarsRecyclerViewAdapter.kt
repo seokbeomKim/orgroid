@@ -36,7 +36,11 @@ class CalendarsRecyclerViewAdapter(val items: ArrayList<CalendarItem>) :
             }
 
             binding.calendarRowRemoveBtn.setOnClickListener {
-                println("remove button clicked: position = ${adapterPosition}")
+                println("remove button clicked: position = $adapterPosition")
+
+                val fragment = binding.root.findFragment<CalendarsFragment>()
+                fragment.showDialogToRemoveCalendar(itemView.context, items[adapterPosition].id)
+                fragment.updateCalendarList()
             }
         }
     }
@@ -44,7 +48,7 @@ class CalendarsRecyclerViewAdapter(val items: ArrayList<CalendarItem>) :
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): CalendarsRecyclerViewAdapter.ViewHolder {
+    ): ViewHolder {
         val view = CalendarsRecyclerViewRowBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
@@ -54,7 +58,7 @@ class CalendarsRecyclerViewAdapter(val items: ArrayList<CalendarItem>) :
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: CalendarsRecyclerViewAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.binding.apply {
             println("item[position] = ${items[position].displayName}")
             titleTextView.text = "title: " + items[position].displayName
