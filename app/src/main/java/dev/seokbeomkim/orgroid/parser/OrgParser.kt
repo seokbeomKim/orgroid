@@ -12,10 +12,12 @@ import java.time.ZonedDateTime
 class OrgParser {
     private var reader: BufferedReader? = null
     private var items: MutableList<OrgItem> = mutableListOf()
+    private var filePath: String? = null
 
     fun open(file: File) {
         try {
-            reader = BufferedReader(FileReader(file.absolutePath))
+            filePath = file.absolutePath
+            reader = BufferedReader(FileReader(filePath))
         } catch (e: Exception) {
             println("Error: ${e.message}")
         }
@@ -27,6 +29,10 @@ class OrgParser {
         } catch (e: Exception) {
             println("Error: ${e.message}")
         }
+    }
+
+    fun getFilePath(): String? {
+        return filePath
     }
 
     fun getItems(): MutableList<OrgItem> {

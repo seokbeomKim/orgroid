@@ -6,7 +6,6 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import dev.seokbeomkim.orgroid.calendar.CalendarHelper
 import dev.seokbeomkim.orgroid.parser.OrgParser
@@ -15,10 +14,6 @@ import java.io.File
 class CalendarsViewModel : ViewModel() {
 
     val parser: OrgParser = OrgParser()
-
-    private val _text = MutableLiveData<String>().apply {
-        value = "This is dashboard Fragment"
-    }
 
     fun getFileNameAndExtension(context: Context, uri: Uri): Pair<String, String?> {
         var fileName = ""
@@ -52,11 +47,10 @@ class CalendarsViewModel : ViewModel() {
 
     /**
      * Try to parse the org file and show the result in a dialog.
-     * @param context The context of the activity.
      * @param fullPath The path of org file
      * @return True if the org file is parsed successfully, false otherwise.
      */
-    fun tryToParseOrgFile(context: Context, fullPath: String?): Boolean {
+    fun tryToParseOrgFile(fullPath: String?): Boolean {
         parser.flush()
 
         if (fullPath != null) {
@@ -89,6 +83,9 @@ class CalendarsViewModel : ViewModel() {
             scheduleCalendar = scheduleId,
             deadlineCalendar = null
         )
+
+        // After creating a calendar, add an new item to setting manager.
+        helper.addCalendarToSettingManager(context, scheduleId, parser.getFilePath())
     }
 
     fun editCalendar(

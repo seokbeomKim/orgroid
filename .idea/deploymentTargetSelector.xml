@@ -8,9 +8,6 @@
       <SelectionState runConfigName="calendarHelperDeleteTest()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="calendarHelperEventCreationTest()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="calendarHelperEventCreationModeATest()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
@@ -18,6 +15,9 @@
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="calendarHelperEventCreationModeBTest()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="testSettingFiles()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

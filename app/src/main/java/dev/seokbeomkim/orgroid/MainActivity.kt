@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -17,6 +18,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import dev.seokbeomkim.orgroid.calendar.CalendarHelper
 import dev.seokbeomkim.orgroid.databinding.ActivityMainBinding
 import dev.seokbeomkim.orgroid.service.OrgSyncService
+import dev.seokbeomkim.orgroid.settings.SettingManager
+import dev.seokbeomkim.orgroid.settings.SettingData
 
 class MainActivity : AppCompatActivity() {
 
@@ -73,5 +76,8 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+//        SettingManager().saveSettings(this, SettingData(true, 16, arrayListOf(1, 2, 3)))
+//        Log.d("OrgroidSetting", SettingManager().loadSettings(this).toString())
     }
 }

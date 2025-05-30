@@ -6,15 +6,20 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.provider.CalendarContract
 import android.util.Log
 import dev.seokbeomkim.orgroid.R
+import dev.seokbeomkim.orgroid.calendar.CalendarHelper
 
 class OrgSyncService : Service() {
     private lateinit var runnable: Runnable
     private lateinit var handler: Handler
+    private lateinit var eventsObservers: ArrayList<CalendarEventsObserver>
+
     private val channelId: String = "OrgSyncServiceChannel"
 
     override fun onBind(p0: Intent?): IBinder? {
@@ -25,11 +30,30 @@ class OrgSyncService : Service() {
         super.onCreate()
         createNotificationChannel()
         handler = Handler(Looper.getMainLooper())
-
         runnable = object : Runnable {
             override fun run() {
                 Log.d("MyForegroundService", "Logging message every 3 seconds")
                 handler.postDelayed(this, 3000) // Repeat every 3 seconds
+            }
+        }
+
+        this.eventsObservers = ArrayList()
+
+        val calendars = CalendarHelper.getInstance().getCalendarArrayList()
+        calendars.let {
+            for (calendar in calendars) {
+                val eventsUri =
+                    Uri.parse("content://com.android.calendar/calendars/${calendar.id}/events")
+                val eventObserver = CalendarEventsObserver(handler)
+                eventObserver.contentResolver = contentResolver
+
+                this.contentResolver.registerContentObserver(
+                    eventsUri,
+                    true,
+                    eventObserver
+                )
+
+                this.eventsObservers.add(eventObserver)
             }
         }
     }
@@ -67,7 +91,8 @@ class OrgSyncService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacks(runnable) // Stop the logging when the service is destroyed
+        for (eventsObserver in this.eventsObservers)
+            contentResolver.unregisterContentObserver(eventsObserver)
+        handler.removeCallbacks(runnable)
     }
-
 }

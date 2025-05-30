@@ -38,7 +38,7 @@ class CalendarsFragment : Fragment() {
                         this.requireContext(), uri
                     )
                     val fullPath = viewModel.getRealPathFromURI(this.requireContext(), uri)
-                    if (viewModel.tryToParseOrgFile(this.requireContext(), fullPath)) {
+                    if (viewModel.tryToParseOrgFile(fullPath)) {
                         showDialogToCreateCalendar(this.requireContext())
                     } else {
                         AlertDialog.Builder(this.requireContext()).setTitle("Error")

@@ -10,11 +10,13 @@ import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
-import dev.seokbeomkim.orgroid.parser.OrgParser
+import androidx.test.runner.AndroidJUnit4
 import dev.seokbeomkim.orgroid.calendar.CalendarHelper
+import dev.seokbeomkim.orgroid.parser.OrgParser
+import dev.seokbeomkim.orgroid.settings.SettingManager
+import dev.seokbeomkim.orgroid.settings.SettingData
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,6 +32,9 @@ import java.util.TimeZone
  */
 @RunWith(AndroidJUnit4::class)
 class CalendarTest {
+
+    private final val TAG = "CalendarTest"
+
     @Rule
     @JvmField
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
@@ -154,5 +159,10 @@ class CalendarTest {
         println(parser)
     }
 
-
+    @Test
+    fun testSettingFiles() {
+        val context = InstrumentationRegistry.getInstrumentation().context
+        SettingManager().saveSettings(context, SettingData(true, 16))
+        Log.d(TAG, SettingManager().loadSettings(context).toString())
+    }
 }

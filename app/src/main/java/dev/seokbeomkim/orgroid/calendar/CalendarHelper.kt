@@ -11,6 +11,8 @@ import android.provider.CalendarContract
 import android.util.Log
 import android.widget.Toast
 import dev.seokbeomkim.orgroid.parser.OrgParser
+import dev.seokbeomkim.orgroid.settings.LocalOrgFile
+import dev.seokbeomkim.orgroid.settings.SettingManager
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -376,5 +378,16 @@ class CalendarHelper {
                 }
             }
         }
+    }
+
+    fun addCalendarToSettingManager(context: Context, lng: Long, path: String?) {
+        val settingHelper = SettingManager()
+        val localOrgFile = LocalOrgFile(
+            calendarId = lng,
+            calendarPath = path!!,
+            lastSyncTime = System.currentTimeMillis()
+        )
+
+        settingHelper.addLocalOrgFile(context, localOrgFile)
     }
 }
