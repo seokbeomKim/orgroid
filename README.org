@@ -1,0 +1,9 @@
+* Orgroid
+
+This was a failed side project, but I believe the Emacs Org parser component is still reusable, so I'm archiving it here.
+
+The original idea was simple: the app would allow users to import local .org files and register them as calendar events. That part was relatively easy to implement. The next step was to synchronize those events whenever calendar changes occurred or when the imported files were modified. However, I soon hit a major roadblock: Android's adoption of SAF (Storage Access Framework) made it impossible to design the behavior I originally envisioned.
+
+The ultimate goal was to build a service for Emacs users that integrates with Google Drive, Dropbox, or WebDAV, allowing them to sync their .org files to the app and manage their schedules on Android. But I realized that developing reliable file event monitoring and synchronization under Android's storage constraints was highly restrictive.
+
+Although I aimed to finish the project by the second half of this year, I’ve decided to wrap it up here.
