@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_prefs_name">orgroid_settings</string>
+    <string name="prefs_local_org_dir">localOrgDirectory</string>
+</resources>

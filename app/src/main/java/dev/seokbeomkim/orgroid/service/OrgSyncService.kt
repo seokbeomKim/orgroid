@@ -14,7 +14,11 @@ import android.provider.CalendarContract
 import android.util.Log
 import dev.seokbeomkim.orgroid.R
 import dev.seokbeomkim.orgroid.calendar.CalendarHelper
+import dev.seokbeomkim.orgroid.settings.SettingManager
 
+/**
+ * CalendarEventsObserver class is an observer for calendar events.
+ */
 class OrgSyncService : Service() {
     private lateinit var runnable: Runnable
     private lateinit var handler: Handler
@@ -56,6 +60,9 @@ class OrgSyncService : Service() {
                 this.eventsObservers.add(eventObserver)
             }
         }
+
+        val settingMgr = SettingManager()
+        settingMgr.loadSettings(applicationContext)
     }
 
     private fun createNotificationChannel() {

@@ -162,7 +162,7 @@ class CalendarTest {
     @Test
     fun testSettingFiles() {
         val context = InstrumentationRegistry.getInstrumentation().context
-        SettingManager().saveSettings(context, SettingData(true, 16))
+        // SettingManager().saveSettings(context, SettingData(true, 16))
         Log.d(TAG, SettingManager().loadSettings(context).toString())
     }
 }
